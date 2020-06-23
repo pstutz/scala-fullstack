@@ -19,7 +19,12 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   def scalaJsDomVersion = "1.0.0"
 
+  def htmlScalaVersion = "1.0.3"
+
   def uuidVersion = "8.1.0"
+
+  override def scalacOptions = super.scalacOptions() :+ "-Ymacro-annotations"
+
 }
 
 trait CommonScalaJsModule extends ScalaJSModule with CommonScalaModule {
@@ -44,7 +49,8 @@ object frontend extends CommonScalaJsModule with ScalaJSWebpackModule {
   override def npmDeps = Agg("uuid" -> uuidVersion)
 
   override def ivyDeps = Agg(
-    ivy"org.scala-js::scalajs-dom::$scalaJsDomVersion"
+    ivy"org.scala-js::scalajs-dom::$scalaJsDomVersion",
+    ivy"org.lrng.binding::html::$htmlScalaVersion"
   )
 
 }

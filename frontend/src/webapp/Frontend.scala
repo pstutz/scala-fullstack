@@ -1,6 +1,10 @@
 package webapp
 
+import com.thoughtworks.binding.Binding._
+import org.lrng.binding.html
+import org.lrng.binding.html.NodeBinding
 import org.scalajs.dom.document
+import org.scalajs.dom.raw._
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
@@ -16,11 +20,15 @@ object Uuid extends js.Object {
 
 object Frontend {
 
+  val uuid: Var[String] = Var("world")
+
+  @html def root: NodeBinding[HTMLDivElement] = <div>
+    <p>Hello {uuid.bind}!</p>
+    <button onclick={_: Event => uuid.value = Uuid.v4()}>Update UUID</button>
+  </div>
+
   def main(args: Array[String]): Unit = {
-    val element = document.createElement("p")
-    val textNode = document.createTextNode(s"Hello ${Uuid.v4()}!")
-    element.appendChild(textNode)
-    document.body.appendChild(element)
+    html.render(document.body, root)
   }
 
 }
