@@ -1,9 +1,7 @@
 package webapp
 
-import com.thoughtworks.binding.Binding._
-import org.lrng.binding.html
-import org.scalajs.dom.document
-import org.scalajs.dom.raw._
+import com.raquo.laminar.api.L._
+import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
@@ -19,15 +17,21 @@ object Uuid extends js.Object {
 
 object Frontend {
 
-  val uuid: Var[String] = Var("world")
+  val $currentName: Var[String] = Var("undefined")
 
-  @html def root = <div>
-    <p>Hello {uuid.bind}!</p>
-    <button onclick={_: Event => uuid.value = Uuid.v4()}>Update UUID</button>
-  </div>
+  val app: Div = div(
+    h1("Web App Example"),
+    div(
+      fontSize := "20px",
+      strong("Hello, "),
+      child.text <-- $currentName.signal
+    ),
+    button(onClick.map(_ => Uuid.v4()) --> $currentName.writer, "Update UUID")
+  )
 
   def main(args: Array[String]): Unit = {
-    html.render(document.body, root)
+    val appContainer = dom.document.getElementById("appContainer")
+    render(appContainer, app)
   }
 
 }
