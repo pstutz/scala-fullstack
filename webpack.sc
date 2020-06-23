@@ -175,7 +175,6 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
   }
 
   def fastOptWp: Target[PathRef] = T.persistent {
-    allSourceFiles()
     val dst = webpackOutputPath()
     webpack().apply(fastOpt().path, dst, false)
     PathRef(dst)
