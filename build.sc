@@ -10,7 +10,7 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   def scalaVersion: T[String] = "2.13.2"
 
-  def scalaJSVersion: T[String] = "1.0.1"
+  def scalaJSVersion: T[String] = "1.1.0"
 
   def uPickleVersion = "1.1.0"
 
