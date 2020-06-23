@@ -3,7 +3,7 @@ package webapp
 import autowire._
 import com.raquo.laminar.api.L._
 import org.scalajs.dom
-
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
@@ -18,21 +18,21 @@ object Uuid extends js.Object {
 
 object Frontend {
 
-  val $currentName: Var[String] = Var("undefined")
+  val $currentName: Var[String] = Var("- push button to compute -")
 
   val $additionResult: EventStream[Int] = EventStream.fromFuture(ApiClient[ExampleApi].add(1, 2).call())
 
   val app: Div = div(
     h1("Web App Example"),
     div(
-      strong("Hello, "),
+      strong("UUID computed by JavaScript library: "),
       child.text <-- $currentName.signal,
     ),
     div(
       strong("Server computed addition of 1 + 2 = "),
       child.text <-- $additionResult.map(_.toString)
     ),
-    button(onClick.map(_ => Uuid.v4()) --> $currentName.writer, "Update UUID")
+    button(onClick.map(_ => Uuid.v4()) --> $currentName.writer, "Compute UUID")
   )
 
   def main(args: Array[String]): Unit = {
