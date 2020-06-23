@@ -2,7 +2,6 @@ package webapp
 
 import com.thoughtworks.binding.Binding._
 import org.lrng.binding.html
-import org.lrng.binding.html.NodeBinding
 import org.scalajs.dom.document
 import org.scalajs.dom.raw._
 
@@ -22,7 +21,7 @@ object Frontend {
 
   val uuid: Var[String] = Var("world")
 
-  @html def root: NodeBinding[HTMLDivElement] = <div>
+  @html def root = <div>
     <p>Hello {uuid.bind}!</p>
     <button onclick={_: Event => uuid.value = Uuid.v4()}>Update UUID</button>
   </div>
