@@ -9,7 +9,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-object Server {
+object WebServer {
   val enableHttp2 = "akka.http.server.preview.enable-http2 = on"
 
   def main(args: Array[String]): Unit = {

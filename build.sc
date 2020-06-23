@@ -7,9 +7,14 @@ import mill.scalalib.scalafmt._
 import webpack.ScalaJSWebpackModule
 
 trait CommonScalaModule extends ScalaModule with ScalafmtModule {
+
   def scalaVersion: T[String] = "2.13.2"
 
   def scalaJSVersion: T[String] = "1.0.1"
+
+  def uPickleVersion = "1.1.0"
+
+  def autowireVersion = "0.3.2"
 
   def osLibVersion = "0.6.2"
 
@@ -25,13 +30,20 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   override def scalacOptions = super.scalacOptions() :+ "-Ymacro-annotations"
 
+  override def ivyDeps = super.ivyDeps() ++ Agg(
+    ivy"com.lihaoyi::upickle::$uPickleVersion",
+    ivy"com.lihaoyi::autowire::$autowireVersion"
+  )
+
 }
 
 trait CommonScalaJsModule extends ScalaJSModule with CommonScalaModule {
+
   def platformSegment = "js"
+
 }
 
-object shared {
+object shared extends Module {
 
   object jvm extends CommonScalaModule {
     override def millSourcePath = super.millSourcePath / up
@@ -40,6 +52,7 @@ object shared {
   object js extends CommonScalaJsModule {
     override def millSourcePath = super.millSourcePath / up
   }
+
 }
 
 object frontend extends CommonScalaJsModule with ScalaJSWebpackModule {
@@ -48,7 +61,7 @@ object frontend extends CommonScalaJsModule with ScalaJSWebpackModule {
 
   override def npmDeps = Agg("uuid" -> uuidVersion)
 
-  override def ivyDeps = Agg(
+  override def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"org.scala-js::scalajs-dom::$scalaJsDomVersion",
     ivy"com.raquo::laminar::$laminarVersion"
   )
@@ -63,12 +76,13 @@ object backend extends CommonScalaModule {
     super.resources() :+ frontend.fastOptWp()
   }
 
-  override def ivyDeps = Agg(
+  override def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"com.lihaoyi::os-lib:$osLibVersion",
     ivy"com.typesafe.akka::akka-http-xml:$akkaHttpVersion",
     ivy"com.typesafe.akka::akka-http2-support:$akkaHttpVersion",
     ivy"com.typesafe.akka::akka-stream:$akkaStreamVersion"
   )
 
-  override def mainClass = Some("webapp.Server")
+  override def mainClass = Some("webapp.WebServer")
+
 }

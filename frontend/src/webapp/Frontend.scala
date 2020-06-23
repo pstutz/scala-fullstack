@@ -1,5 +1,6 @@
 package webapp
 
+import autowire._
 import com.raquo.laminar.api.L._
 import org.scalajs.dom
 
@@ -19,12 +20,17 @@ object Frontend {
 
   val $currentName: Var[String] = Var("undefined")
 
+  val $additionResult: EventStream[Int] = EventStream.fromFuture(ApiClient[ExampleApi].add(1, 2).call())
+
   val app: Div = div(
     h1("Web App Example"),
     div(
-      fontSize := "20px",
       strong("Hello, "),
-      child.text <-- $currentName.signal
+      child.text <-- $currentName.signal,
+    ),
+    div(
+      strong("Server computed addition of 1 + 2 = "),
+      child.text <-- $additionResult.map(_.toString)
     ),
     button(onClick.map(_ => Uuid.v4()) --> $currentName.writer, "Update UUID")
   )
