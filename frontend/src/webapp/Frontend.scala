@@ -1,9 +1,8 @@
 package webapp
 
-//import autowire._
 import com.raquo.laminar.api.L._
 import org.scalajs.dom
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
+
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
