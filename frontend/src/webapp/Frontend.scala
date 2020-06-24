@@ -17,7 +17,7 @@ object Uuid extends js.Object {
 
 object Frontend {
 
-  val $currentName: Var[String] = Var("- push button to compute -")
+  val $currentUuid: Var[String] = Var("- push button to compute -")
 
   val $additionResult: EventStream[Int] = EventStream.fromFuture(RPC.exampleApi.add(1, 2))
 
@@ -25,13 +25,13 @@ object Frontend {
     h1("Web App Example"),
     div(
       strong("UUID computed by JavaScript library: "),
-      child.text <-- $currentName.signal,
+      child.text <-- $currentUuid.signal,
     ),
     div(
       strong("Server computed addition of 1 + 2 = "),
       child.text <-- $additionResult.map(_.toString)
     ),
-    button(onClick.map(_ => Uuid.v4()) --> $currentName.writer, "Compute UUID")
+    button(onClick.map(_ => Uuid.v4()) --> $currentUuid.writer, "Compute UUID")
   )
 
   def main(args: Array[String]): Unit = {
