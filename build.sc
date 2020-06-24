@@ -1,5 +1,6 @@
 import $file.webpack
 import ammonite.ops._
+import coursier.maven.MavenRepository
 import mill._
 import mill.scalajslib._
 import mill.scalalib._
@@ -7,20 +8,21 @@ import mill.scalalib.scalafmt._
 import webpack.ScalaJSWebpackModule
 
 trait CommonScalaModule extends ScalaModule with ScalafmtModule {
-
   def scalaVersion: T[String] = "2.13.2"
 
   def scalaJSVersion: T[String] = "1.1.0"
 
-  def uPickleVersion = "1.1.0"
+  def booPickleVersion = "1.3.2"
 
-  def autowireVersion = "0.3.2"
+  def slothVersion = "0.3.0"
 
   def osLibVersion = "0.6.2"
 
   def akkaHttpVersion = "10.1.12"
 
   def akkaStreamVersion = "2.6.5"
+
+  def covenantVersion = "master-SNAPSHOT"
 
   def scalaJsDomVersion = "1.0.0"
 
@@ -31,20 +33,23 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
   override def scalacOptions = super.scalacOptions() :+ "-Ymacro-annotations"
 
   override def ivyDeps = super.ivyDeps() ++ Agg(
-    ivy"com.lihaoyi::upickle::$uPickleVersion",
-    ivy"com.lihaoyi::autowire::$autowireVersion"
+    ivy"io.suzaku::boopickle::$booPickleVersion",
+    ivy"com.github.cornerman::sloth::$slothVersion",
+    ivy"com.github.cornerman.covenant::covenant-http::$covenantVersion"
+  )
+
+  // Needed for Covenant
+  override def repositories = super.repositories ++ Seq(
+    MavenRepository("https://jitpack.io")
   )
 
 }
 
 trait CommonScalaJsModule extends ScalaJSModule with CommonScalaModule {
-
   def platformSegment = "js"
-
 }
 
 object shared extends Module {
-
   object jvm extends CommonScalaModule {
     override def millSourcePath = super.millSourcePath / up
   }

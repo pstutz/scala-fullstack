@@ -1,6 +1,6 @@
 package webapp
 
-import autowire._
+//import autowire._
 import com.raquo.laminar.api.L._
 import org.scalajs.dom
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -20,7 +20,7 @@ object Frontend {
 
   val $currentName: Var[String] = Var("- push button to compute -")
 
-  val $additionResult: EventStream[Int] = EventStream.fromFuture(ApiClient[ExampleApi].add(1, 2).call())
+  val $additionResult: EventStream[Int] = EventStream.fromFuture(RPC.exampleApi.add(1, 2))
 
   val app: Div = div(
     h1("Web App Example"),
