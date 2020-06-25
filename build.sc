@@ -30,6 +30,14 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   def uuidVersion = "8.1.0"
 
+  def postCssLoaderVersion = "3.0.0"
+
+  def styleLoaderVersion = "1.2.1"
+
+  def tailwindCssVersion = "1.4.6"
+
+  def autoPrefixerVersion = "9.8.4"
+
   override def scalacOptions = super.scalacOptions() :+ "-Ymacro-annotations"
 
   override def ivyDeps = super.ivyDeps() ++ Agg(
@@ -64,12 +72,23 @@ object frontend extends CommonScalaJsModule with ScalaJSWebpackModule {
 
   override def moduleDeps: Seq[ScalaJSModule] = Seq(shared.js)
 
-  override def npmDeps = Agg("uuid" -> uuidVersion)
+  override def npmDeps = Agg(
+    "uuid" -> uuidVersion
+  )
+
+  override def npmDevDeps = Agg(
+    "postcss-loader" -> postCssLoaderVersion,
+    "style-loader" -> styleLoaderVersion,
+    "tailwindcss" -> tailwindCssVersion,
+    "autoprefixer" -> autoPrefixerVersion,
+  )
 
   override def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"org.scala-js::scalajs-dom::$scalaJsDomVersion",
     ivy"com.raquo::laminar::$laminarVersion"
   )
+
+  override def maybeCustomWebpackConfig = Some(millSourcePath /  "custom-webpack.config")
 
 }
 

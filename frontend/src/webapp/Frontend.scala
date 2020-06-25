@@ -7,6 +7,10 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
 @js.native
+@JSImport("./styles.css", JSImport.Namespace)
+object Css extends js.Object
+
+@js.native
 @JSImport("uuid", JSImport.Default)
 object Uuid extends js.Object {
   @js.native
@@ -16,14 +20,16 @@ object Uuid extends js.Object {
 }
 
 object Frontend {
+  private val css = Css
 
-  val $currentUuid: Var[String] = Var("- push button to compute -")
+  private val $currentUuid: Var[String] = Var("- push button to compute -")
 
-  val $additionResult: EventStream[Int] = EventStream.fromFuture(RPC.exampleApi.add(1, 2))
+  private val $additionResult: EventStream[Int] = EventStream.fromFuture(RPC.exampleApi.add(1, 2))
 
-  val app: Div = div(
+  private val app: Div = div(
     h1("Web App Example"),
     div(
+      cls := "text-xl",
       strong("UUID computed by JavaScript library: "),
       child.text <-- $currentUuid.signal,
     ),
