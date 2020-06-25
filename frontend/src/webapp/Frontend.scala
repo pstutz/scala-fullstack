@@ -27,9 +27,9 @@ object Frontend {
   private val $additionResult: EventStream[Int] = EventStream.fromFuture(RPC.exampleApi.add(1, 2))
 
   private val app: Div = div(
-    h1("Web App Example"),
+    h1(cls := "text-xl", // Tailwind CSS class, processed & loaded by webpack
+      "Web App Example"),
     div(
-      cls := "text-xl",
       strong("UUID computed by JavaScript library: "),
       child.text <-- $currentUuid.signal,
     ),
