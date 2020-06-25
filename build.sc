@@ -97,6 +97,7 @@ object backend extends CommonScalaModule {
   override def moduleDeps = Seq(shared.jvm)
 
   override def resources = T.sources {
+    // TODO: Depend on fullOptWp with if a config flag is set
     super.resources() :+ frontend.fastOptWp()
   }
 
