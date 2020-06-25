@@ -22,22 +22,26 @@ object Uuid extends js.Object {
 object Frontend {
   private val css = Css
 
-  private val $currentUuid: Var[String] = Var("- push button to compute -")
+  private val $currentUuid: Var[String] = Var(Uuid.v4())
 
   private val $additionResult: EventStream[Int] = EventStream.fromFuture(RPC.exampleApi.add(1, 2))
 
-  private val app: Div = div(
-    h1(cls := "text-xl", // Tailwind CSS class, processed & loaded by webpack
-      "Web App Example"),
-    div(
-      strong("UUID computed by JavaScript library: "),
-      child.text <-- $currentUuid.signal,
+  private val app: Div = div(cls := "container mt-10 rounded overflow-hidden shadow-lg",
+    div(cls := "px-8 py-6",
+      div(cls := "font-bold text-xl",
+        "Web App Example",
+      ),
+      p(cls := "mt-4 text-gray-700 text-base",
+        child.text <-- $additionResult.map(r => s"Addition RPC: 1 + 2 = $r")
+      ),
+      p(cls := "mt-4 text-gray-700 text-base",
+        child.text <-- $currentUuid.signal.map(uuid => s"UUID computed by JavaScript library: $uuid")
+      ),
+      button(
+        cls := "mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded",
+        onClick.map(_ => Uuid.v4()) --> $currentUuid.writer, "Recompute UUID"
+      )
     ),
-    div(
-      strong("Server computed addition of 1 + 2 = "),
-      child.text <-- $additionResult.map(_.toString)
-    ),
-    button(onClick.map(_ => Uuid.v4()) --> $currentUuid.writer, "Compute UUID")
   )
 
   def main(args: Array[String]): Unit = {
