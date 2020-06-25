@@ -1,6 +1,6 @@
 # scala-fullstack
 
-ScalaJS/Scala single page application template using the Mill build tool that supports npm dependencies with webpack. The server is implemented with Akka HTTP and the project contains examples for calling JavaScript from npm dependencies, doing RPC with sloth, and updating the UI with Laminar.
+ScalaJS/Scala single page application template using the Mill build tool that supports npm dependencies with webpack. The server is implemented with Akka HTTP and the project contains examples for calling JavaScript from npm dependencies, doing RPC with sloth, and updating the UI with Laminar. It also shows how to add CSS dependencies and process them with webpack.
 
 ### Usage
 Start the server with:
