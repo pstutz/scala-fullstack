@@ -34,8 +34,6 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
 
   def webpackCliVersion: Target[String] = "3.3.11"
 
-  def webpackDevServerVersion: Target[String] = "3.11.0"
-
   def sourceMapLoaderVersion: Target[String] = "1.0.0"
 
   override def moduleKind: T[ModuleKind] = T {
@@ -80,7 +78,6 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
           "webpack" -> webpackVersion(),
           "webpack-merge" -> webpackMergeVersion(),
           "webpack-cli" -> webpackCliVersion(),
-          "webpack-dev-server" -> webpackDevServerVersion(),
           "source-map-loader" -> sourceMapLoaderVersion()
         )
 
