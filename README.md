@@ -5,10 +5,10 @@ ScalaJS/Scala single page application template using the Mill build tool that su
 ### Usage
 Start the server with:
 ```
-./mill -watch backend.runBackground
+./mill -watch "backend[dev].runBackground" 
 ```
 
-The website is served at `http://localhost:8080` and the server restarts automatically when files are changed.
+The website is served at `http://localhost:8080` and the server restarts automatically when files change.
 
 ### IntelliJ IDEA Import
 Run
