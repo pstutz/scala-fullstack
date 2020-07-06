@@ -2,6 +2,7 @@ import $file.webpack
 import ammonite.ops._
 import coursier.maven.MavenRepository
 import mill._
+import mill.define.Task
 import mill.scalajslib._
 import mill.scalalib._
 import mill.scalalib.scalafmt._
@@ -92,14 +93,24 @@ object frontend extends CommonScalaJsModule with ScalaJSWebpackModule {
 
 }
 
-object backend extends CommonScalaModule {
+object backend extends mill.Cross[BackendModule]("dev", "prod")
+
+class BackendModule(mode: String) extends CommonScalaModule {
+
+  def jsBundle: Task[PathRef] = mode match {
+    case "dev" => frontend.fastOptWp
+    case "prod" => frontend.fullOptWp
+    case _ => throw new UnsupportedOperationException(s"Supported modules modes: ${
+      backend.items.map { case (name, _) => s"`$name`" }.mkString(", ")
+    }")
+  }
+
+  // Same sources for "dev" and "prod"
+  override def millSourcePath = super.millSourcePath / up
 
   override def moduleDeps = Seq(shared.jvm)
 
-  override def resources = T.sources {
-    // TODO: Depend on fullOptWp with if a config flag is set
-    super.resources() :+ frontend.fastOptWp()
-  }
+  override def resources = T.sources { super.resources() :+ jsBundle() }
 
   override def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"com.lihaoyi::os-lib:$osLibVersion",
