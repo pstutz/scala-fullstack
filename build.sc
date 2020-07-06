@@ -39,6 +39,8 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   def autoPrefixerVersion = "9.8.4"
 
+  def scalaJsFriendlySourceMapLoaderVersion = "0.1.5"
+
   override def scalacOptions = super.scalacOptions() :+ "-Ymacro-annotations"
 
   override def ivyDeps = super.ivyDeps() ++ Agg(
@@ -82,6 +84,7 @@ object frontend extends CommonScalaJsModule with ScalaJSWebpackModule {
     "style-loader" -> styleLoaderVersion,
     "tailwindcss" -> tailwindCssVersion,
     "autoprefixer" -> autoPrefixerVersion,
+    "scalajs-friendly-source-map-loader" -> scalaJsFriendlySourceMapLoaderVersion
   )
 
   override def ivyDeps = super.ivyDeps() ++ Agg(
@@ -89,7 +92,7 @@ object frontend extends CommonScalaJsModule with ScalaJSWebpackModule {
     ivy"com.raquo::laminar::$laminarVersion"
   )
 
-  override def maybeCustomWebpackConfig = Some(millSourcePath /  "custom-webpack.config")
+  override def customWebpackConfigs = T.sources(millSourcePath /  "custom-webpack.config")
 
 }
 
