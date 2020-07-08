@@ -37,7 +37,7 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
 
   def sourceMapLoaderVersion: Target[String] = "1.0.0"
 
-  def scalaJsFriendlySourceMapLoaderVersion = "0.1.5"
+  def scalaJsFriendlySourceMapLoaderVersion: Target[String] = "0.1.5"
 
   override def moduleKind: T[ModuleKind] = T {
     ModuleKind.CommonJSModule
@@ -55,7 +55,7 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
   // Custom webpack configuration objects that get merged with the generated config
   def customWebpackConfigs: Sources = T.sources()
 
-  // All JS dependenciesx
+  // All JS dependencies
   def jsDeps: T[JsDeps] = T {
     val jsDepsFromIvyDeps =
       resolveDeps(transitiveIvyDeps)().flatMap(pathRef =>
@@ -109,12 +109,12 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
     (ops.Path, String, Seq[ReadablePath], String, String, Boolean) => Unit] =
     T.task {
       (
-          outputPath: ops.Path,
-          cfgFileName: String,
-          customCfgs: Seq[ReadablePath],
-          entry: String,
-          outputFilename: String,
-          opt: Boolean
+        outputPath: ops.Path,
+        cfgFileName: String,
+        customCfgs: Seq[ReadablePath],
+        entry: String,
+        outputFilename: String,
+        opt: Boolean
       ) =>
         val generatedCfgName = "generatedWebpackCfg"
         val generatedCfg =
@@ -154,17 +154,17 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
                   val customCfgString =
                     s"""|// Custom webpack config from '$customCfg', defined in ScalaJSWebpackModule
                         |const $customCfgName = ${readStringFromInputStream(
-                         customCfg.getInputStream).trim};
+                      customCfg.getInputStream).trim};
                         |""".stripMargin
                   customCfgName -> customCfgString
               }
             s"""|$generatedCfg
                 |${customCfgs
-                 .map { case (_, cfgString) => cfgString }
-                 .mkString("\n")}
+              .map { case (_, cfgString) => cfgString }
+              .mkString("\n")}
                 |module.exports = merge($generatedCfgName, ${customCfgs
-                 .map { case (cfgName, _) => cfgName }
-                 .mkString(",")});
+              .map { case (cfgName, _) => cfgName }
+              .mkString(",")});
                 |""".stripMargin
         }
         ops.write.over(outputPath / cfgFileName, mergedCfg)
@@ -226,9 +226,9 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
 
   @scala.annotation.tailrec
   private def readStringFromInputStream(
-      in: InputStream,
-      buffer: Array[Byte] = new Array[Byte](8192),
-      out: ByteArrayOutputStream = new ByteArrayOutputStream
+    in: InputStream,
+    buffer: Array[Byte] = new Array[Byte](8192),
+    out: ByteArrayOutputStream = new ByteArrayOutputStream
   ): String = {
     val byteCount = in.read(buffer)
     if (byteCount < 0) {
@@ -240,7 +240,7 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
   }
 
   private def collectZipEntries[R](jar: File)(
-      f: PartialFunction[(ZipEntry, ZipInputStream), R]
+    f: PartialFunction[(ZipEntry, ZipInputStream), R]
   ): List[R] = {
     val stream = new ZipInputStream(
       new BufferedInputStream(new FileInputStream(jar)))
@@ -274,8 +274,8 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
             "compile-devDependencies")
         )
       case (zipEntry, stream)
-          if zipEntry.getName.endsWith(".js") && !zipEntry.getName.startsWith(
-            "scala/") =>
+        if zipEntry.getName.endsWith(".js") && !zipEntry.getName.startsWith(
+          "scala/") =>
         JsDeps(
           jsSources = Map(zipEntry.getName -> readStringFromInputStream(stream))
         )
@@ -285,9 +285,9 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
 }
 
 case class JsDeps(
-    dependencies: List[(String, String)] = Nil,
-    devDependencies: List[(String, String)] = Nil,
-    jsSources: Map[String, String] = Map.empty
+  dependencies: List[(String, String)] = Nil,
+  devDependencies: List[(String, String)] = Nil,
+  jsSources: Map[String, String] = Map.empty
 ) {
 
   def ++(that: JsDeps): JsDeps =
