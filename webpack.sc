@@ -8,6 +8,7 @@ import mill.eval.PathRef
 import mill.scalajslib._
 import mill.scalajslib.api.ModuleKind
 import mill.util.Ctx
+import os.ReadablePath
 
 /** Trait for Scala.js modules that create a webpack bundle from their NPM dependencies.
  *
@@ -36,6 +37,8 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
 
   def sourceMapLoaderVersion: Target[String] = "1.0.0"
 
+  def scalaJsFriendlySourceMapLoaderVersion = "0.1.5"
+
   override def moduleKind: T[ModuleKind] = T {
     ModuleKind.CommonJSModule
   }
@@ -52,7 +55,7 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
   // Custom webpack configuration objects that get merged with the generated config
   def customWebpackConfigs: Sources = T.sources()
 
-  // All JS dependencies
+  // All JS dependenciesx
   def jsDeps: T[JsDeps] = T {
     val jsDepsFromIvyDeps =
       resolveDeps(transitiveIvyDeps)().flatMap(pathRef =>
@@ -78,7 +81,8 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
           "webpack" -> webpackVersion(),
           "webpack-merge" -> webpackMergeVersion(),
           "webpack-cli" -> webpackCliVersion(),
-          "source-map-loader" -> sourceMapLoaderVersion()
+          "source-map-loader" -> sourceMapLoaderVersion(),
+          "scalajs-friendly-source-map-loader" -> scalaJsFriendlySourceMapLoaderVersion
         )
 
       ops.write.over(
@@ -101,13 +105,13 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
     }
   }
 
-  def writeWpConfig
-    : Task[(ops.Path, String, Seq[PathRef], String, String, Boolean) => Unit] =
+  def writeWpConfig: Task[
+    (ops.Path, String, Seq[ReadablePath], String, String, Boolean) => Unit] =
     T.task {
       (
           outputPath: ops.Path,
           cfgFileName: String,
-          customCfgs: Seq[PathRef],
+          customCfgs: Seq[ReadablePath],
           entry: String,
           outputFilename: String,
           opt: Boolean
@@ -148,9 +152,10 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
                 case (customCfg, i) =>
                   val customCfgName = s"customWebpackCfg$i"
                   val customCfgString =
-                  s"""|// Custom webpack config from '${customCfg.path}', defined in ScalaJSWebpackModule
-                      |const $customCfgName = ${readStringFromInputStream(customCfg.path.getInputStream).trim}
-                      |""".stripMargin
+                    s"""|// Custom webpack config from '$customCfg', defined in ScalaJSWebpackModule
+                        |const $customCfgName = ${readStringFromInputStream(
+                         customCfg.getInputStream).trim};
+                        |""".stripMargin
                   customCfgName -> customCfgString
               }
             s"""|$generatedCfg
@@ -199,7 +204,7 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
         .apply(
           dst,
           cfg,
-          customWebpackConfigs(),
+          customWebpackConfigs().map(_.path),
           entryPointJs.toString,
           webpackBundleFilename(),
           opt)
