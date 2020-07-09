@@ -40,7 +40,7 @@ import mill.util.Ctx
  * }
  * }}}
  *
- * Example usage: `./mill "frontend[dev].compile"`
+ * How to run: `./mill "frontend[dev].compile"`
  */
 trait ScalaJSWebpackModule extends ScalaJSModule {
 
@@ -98,40 +98,47 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
       case mod: ScalaJSWebpackModule => mod.jsDeps
     })
 
-  def installNpmDependencies: Task[PathRef] = T {
-    val compileDeps = jsDeps().dependencies
-    val compileDevDeps =
-      jsDeps().devDependencies ++ Seq(
-        "webpack" -> webpackVersion(),
-        "webpack-merge" -> webpackMergeVersion(),
-        "webpack-cli" -> webpackCliVersion(),
-        "source-map-loader" -> sourceMapLoaderVersion(),
-        "scalajs-friendly-source-map-loader" -> scalaJsFriendlySourceMapLoaderVersion()
+  def webpackPackageSpec: Task[String] = T {
+    ujson
+      .Obj(
+        "dependencies" -> jsDeps().dependencies,
+        "devDependencies" -> (jsDeps().devDependencies ++ Seq(
+          "webpack" -> webpackVersion(),
+          "webpack-merge" -> webpackMergeVersion(),
+          "webpack-cli" -> webpackCliVersion(),
+          "source-map-loader" -> sourceMapLoaderVersion(),
+          "scalajs-friendly-source-map-loader" -> scalaJsFriendlySourceMapLoaderVersion()
+        ))
       )
-    ops.write.over(
-      webpackOutputPath() / "package.json",
-      ujson
-        .Obj("dependencies" -> compileDeps, "devDependencies" -> compileDevDeps)
-        .render(2) + "\n")
+      .render(2) + "\n"
+  }
+
+  def writeWebpackPackageSpec: Task[PathRef] = T {
+    ops.write.over(webpackOutputPath() / "package.json", webpackPackageSpec())
+    PathRef(webpackOutputPath() / "package.json")
+  }
+
+  def installNpmDependencies: Task[PathRef] = T {
+    writeWebpackPackageSpec()
     print(ops.%%("npm", "install", "--no-fund")(webpackOutputPath()).out.string)
     PathRef(webpackOutputPath())
   }
 
-  def writeBundleSources: Task[PathRef] = T {
+  def writeWebpackBundleSources: Task[PathRef] = T {
     jsDeps().jsSources foreach {
       case (n, s) => ops.write.over(webpackOutputPath() / n, s)
     }
     PathRef(webpackOutputPath())
   }
 
-  def writeResources: Task[PathRef] = T {
+  def writeWebpackResources: Task[PathRef] = T {
     resources() foreach { resourcePath: PathRef =>
       os.copy.over(resourcePath.path, webpackOutputPath())
     }
     PathRef(webpackOutputPath())
   }
 
-  def writeEntryPoint: Task[PathRef] = T {
+  def writeWebpackEntryPoint: Task[PathRef] = T {
     val jsFilename = compiledJs().path.segments.toSeq.last
     val sourceMapFilename = s"$jsFilename.map"
     val entryPointJs = webpackOutputPath() / jsFilename
@@ -143,7 +150,11 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
     PathRef(entryPointJs)
   }
 
-  def writeConfig: Task[PathRef] = T {
+  def webpackConfig: Task[String] = T {
+    val entry = webpackOutputPath() / compiledJs().path.segments.toSeq.last
+    val customConfigs = customWebpackConfigs().map { cfg =>
+      cfg.toString -> readStringFromInputStream(cfg.path.getInputStream).trim
+    }
     val generatedCfgName = "generatedWebpackCfg"
     val generatedCfg =
       s"""|const merge = require('webpack-merge');
@@ -152,7 +163,7 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
           |const $generatedCfgName = {
           |  "mode": "${if (optimizeJs) "production" else "development"}",
           |  "devtool": "${if (optimizeJs) "eval" else "source-map"}",
-          |  "entry": "${webpackOutputPath() / compiledJs().path.segments.toSeq.last}",
+          |  "entry": "$entry",
           |  "output": {
           |    "path": "${webpackOutputPath()}",
           |    "filename": "${webpackBundleFilename()}"
@@ -169,42 +180,43 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
           |  }
           |};
           |""".stripMargin
-    val mergedCfg = customWebpackConfigs() match {
-      case Nil =>
-        s"""|$generatedCfg
-            |module.exports = $generatedCfgName;
-            |""".stripMargin
-      case customCfgPaths =>
-        val customCfgs: Seq[(String, String)] = // Seq(name, cfgString)
-          customCfgPaths.zipWithIndex.map {
-            case (customCfg, i) =>
-              val customCfgName = s"customWebpackCfg$i"
-              val customCfgString =
-                s"""|// Custom webpack config from '$customCfg', defined in ScalaJSWebpackModule
-                    |const $customCfgName = ${readStringFromInputStream(
-                     customCfg.path.getInputStream).trim};
-                    |""".stripMargin
-              customCfgName -> customCfgString
-          }
-        s"""|$generatedCfg
-            |${customCfgs
-             .map { case (_, cfgString) => cfgString }
-             .mkString("\n")}
-            |module.exports = merge($generatedCfgName, ${customCfgs
-             .map { case (cfgName, _) => cfgName }
-             .mkString(",")});
-            |""".stripMargin
+    val customCfgSnippets = customConfigs.zipWithIndex.map {
+      case ((filename, cfg), i) =>
+        val customCfgName = s"customWebpackCfg$i"
+        val customCfgString =
+          s"""|// Custom webpack config from '$filename', defined in ScalaJSWebpackModule
+              |const $customCfgName = $cfg;
+              |""".stripMargin
+        customCfgName -> customCfgString
     }
-    ops.write.over(webpackOutputPath() / webpackConfigFilename(), mergedCfg)
-    PathRef(webpackOutputPath() / webpackConfigFilename())
+    if (customCfgSnippets.isEmpty) {
+      s"""|$generatedCfg
+          |module.exports = $generatedCfgName;
+          |""".stripMargin
+    } else {
+      s"""|$generatedCfg
+          |${customCfgSnippets
+        .map { case (_, cfgString) => cfgString }
+        .mkString("\n")}
+          |module.exports = merge($generatedCfgName, ${customCfgSnippets
+        .map { case (cfgName, _) => cfgName }
+        .mkString(",")});
+          |""".stripMargin
+    }
+  }
+
+  def writeWebpackConfig: Task[PathRef] = T {
+    val configFilePath = webpackOutputPath() / webpackConfigFilename()
+    ops.write.over(configFilePath, webpackConfig())
+    PathRef(configFilePath)
   }
 
   def webpackBundle: Target[PathRef] = T.persistent {
-    writeBundleSources()
-    writeResources()
+    writeWebpackBundleSources()
+    writeWebpackResources()
     installNpmDependencies()
-    writeConfig()
-    writeEntryPoint()
+    writeWebpackConfig()
+    writeWebpackEntryPoint()
     print(
       ops
         .%%(
@@ -221,9 +233,9 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
 
   @scala.annotation.tailrec
   private def readStringFromInputStream(
-      in: InputStream,
-      buffer: Array[Byte] = new Array[Byte](8192),
-      out: ByteArrayOutputStream = new ByteArrayOutputStream
+    in: InputStream,
+    buffer: Array[Byte] = new Array[Byte](8192),
+    out: ByteArrayOutputStream = new ByteArrayOutputStream
   ): String = {
     val byteCount = in.read(buffer)
     if (byteCount < 0) {
@@ -235,7 +247,7 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
   }
 
   private def collectZipEntries[R](jar: File)(
-      f: PartialFunction[(ZipEntry, ZipInputStream), R]
+    f: PartialFunction[(ZipEntry, ZipInputStream), R]
   ): List[R] = {
     val stream = new ZipInputStream(
       new BufferedInputStream(new FileInputStream(jar)))
@@ -269,8 +281,8 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
             "compile-devDependencies")
         )
       case (zipEntry, stream)
-          if zipEntry.getName.endsWith(".js") && !zipEntry.getName.startsWith(
-            "scala/") =>
+        if zipEntry.getName.endsWith(".js") && !zipEntry.getName.startsWith(
+          "scala/") =>
         JsDeps(
           jsSources = Map(zipEntry.getName -> readStringFromInputStream(stream))
         )
@@ -280,9 +292,9 @@ trait ScalaJSWebpackModule extends ScalaJSModule {
 }
 
 case class JsDeps(
-    dependencies: List[(String, String)] = Nil,
-    devDependencies: List[(String, String)] = Nil,
-    jsSources: Map[String, String] = Map.empty
+  dependencies: Seq[(String, String)] = Nil,
+  devDependencies: Seq[(String, String)] = Nil,
+  jsSources: Map[String, String] = Map.empty
 ) {
 
   def ++(that: JsDeps): JsDeps =
