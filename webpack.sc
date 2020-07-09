@@ -14,7 +14,7 @@ import mill.util.Ctx
  *
  * Usage example:
  * {{{
- * import mill.contrib.ScalaJSWebpackModule._
+ * import mill.contrib.ScalaJSWebpackModule
  *
  * object frontend extends mill.Cross[FrontendModule]("dev", "prod")
  *
