@@ -2,6 +2,7 @@ import $file.webpack
 import ammonite.ops._
 import coursier.maven.MavenRepository
 import mill._
+import mill.api.PathRef
 import mill.define.Task
 import mill.scalajslib._
 import mill.scalalib._
@@ -69,7 +70,22 @@ object shared extends Module {
 
 }
 
-object frontend extends CommonScalaJsModule with ScalaJSWebpackModule {
+object frontend extends mill.Cross[FrontendModule]("dev", "prod")
+
+class FrontendModule(jsCompilationMode: String)
+    extends ScalaJSWebpackModule
+    with CommonScalaJsModule {
+
+  override def optimizeJs: Boolean = jsCompilationMode match {
+    case "dev"  => false
+    case "prod" => true
+    case _ =>
+      throw new UnsupportedOperationException(
+        s"Supported module modes: ['dev', 'prod']")
+  }
+
+  // Same sources and resources for "dev" and "prod"
+  override def millSourcePath = super.millSourcePath / os.up
 
   override def moduleDeps: Seq[ScalaJSModule] = Seq(shared.js)
 
@@ -89,7 +105,8 @@ object frontend extends CommonScalaJsModule with ScalaJSWebpackModule {
     ivy"com.raquo::laminar::$laminarVersion"
   )
 
-  override def customWebpackConfigs = T.sources(millSourcePath /  "custom-webpack.config")
+  override def customWebpackConfigs =
+    T.sources(millSourcePath / "custom-webpack.config")
 
 }
 
@@ -98,11 +115,13 @@ object backend extends mill.Cross[BackendModule]("dev", "prod")
 class BackendModule(mode: String) extends CommonScalaModule {
 
   def jsBundle: Task[PathRef] = mode match {
-    case "dev" => frontend.fastOptWp
-    case "prod" => frontend.fullOptWp
-    case _ => throw new UnsupportedOperationException(s"Supported modules modes: ${
-      backend.items.map { case (name, _) => s"`$name`" }.mkString(", ")
-    }")
+    case "dev"  => frontend("dev").webpackBundle
+    case "prod" => frontend("prod").webpackBundle
+    case _ =>
+      throw new UnsupportedOperationException(
+        s"Supported module modes: ${backend.items
+          .map { case (name, _) => s"`$name`" }
+          .mkString(", ")}")
   }
 
   // Same sources for "dev" and "prod"
