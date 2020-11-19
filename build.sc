@@ -20,7 +20,7 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   def osLibVersion = "0.6.3"
 
-  def akkaHttpVersion = "10.1.12"
+  def akkaHttpVersion = "10.1.13"
 
   def akkaStreamVersion = "2.6.6"
 
