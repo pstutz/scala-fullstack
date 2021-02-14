@@ -28,7 +28,7 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   def scalaJsDomVersion = "1.0.0"
 
-  def laminarVersion = "0.9.1"
+  def laminarVersion = "0.9.2"
 
   def uuidVersion = "8.1.0"
 
