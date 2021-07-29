@@ -14,7 +14,7 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   def scalaJSVersion: T[String] = "1.1.0"
 
-  def booPickleVersion = "1.3.3"
+  def booPickleVersion = "1.4.0"
 
   def slothVersion = "0.3.0"
 
