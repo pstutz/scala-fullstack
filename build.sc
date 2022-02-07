@@ -16,7 +16,7 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   def booPickleVersion = "1.3.3"
 
-  def slothVersion = "0.3.0"
+  def slothVersion = "0.5.0"
 
   def osLibVersion = "0.6.3"
 
