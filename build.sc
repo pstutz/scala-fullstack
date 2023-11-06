@@ -18,7 +18,7 @@ trait CommonScalaModule extends ScalaModule with ScalafmtModule {
 
   def slothVersion = "0.3.0"
 
-  def osLibVersion = "0.6.3"
+  def osLibVersion = "0.9.2"
 
   def akkaHttpVersion = "10.1.12"
 
